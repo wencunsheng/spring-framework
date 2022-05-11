@@ -150,7 +150,7 @@ public class DefaultResourceLoader implements ResourceLoader {
 				return resource;
 			}
 		}
-
+		//如果是类路径的方式，那需要使用 ClassPathResource 来得到 bean 文件的资源对象
 		if (location.startsWith("/")) {
 			return getResourceByPath(location);
 		}
@@ -160,11 +160,14 @@ public class DefaultResourceLoader implements ResourceLoader {
 		else {
 			try {
 				// Try to parse the location as a URL...
+				// 如果是 URL 方式，使用 UrlResource 作为 bean 文件的资源对象
 				URL url = new URL(location);
 				return (ResourceUtils.isFileURL(url) ? new FileUrlResource(url) : new UrlResource(url));
 			}
 			catch (MalformedURLException ex) {
 				// No URL -> resolve as resource path.
+				//如果既不是 classpath 标识，又不是 URL 标识的 Resource 定位，则调用容器本身的 getResourceByPath 方法获取 Resource
+				//FileSystemXmlApplicationContext 容器提供了 getResourceByPath 方法的实现
 				return getResourceByPath(location);
 			}
 		}

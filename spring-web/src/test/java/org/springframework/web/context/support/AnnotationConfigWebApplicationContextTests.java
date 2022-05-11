@@ -23,6 +23,8 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.AnnotationBeanNameGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.context.test.TestBean01;
+import org.springframework.web.context.test.TestBean02;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,10 +38,11 @@ public class AnnotationConfigWebApplicationContextTests {
 	@SuppressWarnings("resource")
 	public void registerSingleClass() {
 		AnnotationConfigWebApplicationContext ctx = new AnnotationConfigWebApplicationContext();
-		ctx.register(Config.class);
+		ctx.register(TestBean01.class);
+		ctx.register(TestBean02.class);
 		ctx.refresh();
 
-		TestBean bean = ctx.getBean(TestBean.class);
+		TestBean01 bean = ctx.getBean(TestBean01.class);
 		assertThat(bean).isNotNull();
 	}
 

@@ -500,14 +500,23 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * <p>May be overridden in subclasses in order to initialize further strategy objects.
 	 */
 	protected void initStrategies(ApplicationContext context) {
+		//1.初始化MultipartResolver，主要用于处理文件上传
 		initMultipartResolver(context);
+		//2.初始化LocaleResolver,实现国际化
 		initLocaleResolver(context);
+		//2.初始化LocaleResolver,实现国际化
 		initThemeResolver(context);
+		//4.初始化HandlerMappings
 		initHandlerMappings(context);
+		//5.初始化HandlerAdapters
 		initHandlerAdapters(context);
+		//6.初始化异常处理器
 		initHandlerExceptionResolvers(context);
+		//7.初始化请求解析视图翻译器,为请求找到一个合适的View
 		initRequestToViewNameTranslator(context);
+		///8.初始化视图解析器
 		initViewResolvers(context);
+		//9.初始化FlashMapManager,闪存管理器。可以缓存请求的属性值交给下一个请求,再清空缓存
 		initFlashMapManager(context);
 	}
 
@@ -997,6 +1006,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * @param response current HTTP response
 	 * @throws Exception in case of any kind of processing failure
 	 */
+	//中央控制器,控制请求的转发
 	protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		HttpServletRequest processedRequest = request;
 		HandlerExecutionChain mappedHandler = null;
@@ -1009,20 +1019,28 @@ public class DispatcherServlet extends FrameworkServlet {
 			Exception dispatchException = null;
 
 			try {
+				// 1.检查是否是文件上传的请求
 				processedRequest = checkMultipart(request);
 				multipartRequestParsed = (processedRequest != request);
 
 				// Determine handler for the current request.
+				// 2.取得处理当前请求的 Controller,这里也称为 hanlder,处理器,
+				// 第一个步骤的意义就在这里体现了.这里并不是直接返回 Controller,
+				// 而是返回的 HandlerExecutionChain 请求处理器链对象,
+				// 该对象封装了 handler 和 interceptors.
 				mappedHandler = getHandler(processedRequest);
 				if (mappedHandler == null) {
+					// 如果 handler 为空,则返回 404
 					noHandlerFound(processedRequest, response);
 					return;
 				}
 
 				// Determine handler adapter for the current request.
+				//3. 获取处理 request 的处理器适配器 handler adapter
 				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
 
 				// Process last-modified header, if supported by the handler.
+				// 处理 last-modified 请求头
 				String method = request.getMethod();
 				boolean isGet = "GET".equals(method);
 				if (isGet || "HEAD".equals(method)) {
@@ -1031,19 +1049,22 @@ public class DispatcherServlet extends FrameworkServlet {
 						return;
 					}
 				}
-
+				//mappedHandler调用拦截器的preHandler方法
 				if (!mappedHandler.applyPreHandle(processedRequest, response)) {
 					return;
 				}
 
 				// Actually invoke the handler.
+				// 4.实际的处理器处理请求,返回结果视图对象
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
 				if (asyncManager.isConcurrentHandlingStarted()) {
 					return;
 				}
 
+				// 结果视图对象的处理,为request请求找到视图
 				applyDefaultViewName(processedRequest, mv);
+				//调用拦截器的postHandle方法
 				mappedHandler.applyPostHandle(processedRequest, response, mv);
 			}
 			catch (Exception ex) {
@@ -1067,6 +1088,7 @@ public class DispatcherServlet extends FrameworkServlet {
 			if (asyncManager.isConcurrentHandlingStarted()) {
 				// Instead of postHandle and afterCompletion
 				if (mappedHandler != null) {
+					// 请求成功响应之后的方法
 					mappedHandler.applyAfterConcurrentHandlingStarted(processedRequest, response);
 				}
 			}
@@ -1230,6 +1252,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	@Nullable
 	protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
 		if (this.handlerMappings != null) {
+			//注意this.handlerMappings成员变量
 			for (HandlerMapping mapping : this.handlerMappings) {
 				HandlerExecutionChain handler = mapping.getHandler(request);
 				if (handler != null) {

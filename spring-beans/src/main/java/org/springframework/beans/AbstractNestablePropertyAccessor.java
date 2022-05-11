@@ -269,7 +269,7 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 			setPropertyValue(tokens, pv);
 		}
 	}
-
+	//实现属性依赖注入功能
 	protected void setPropertyValue(PropertyTokenHolder tokens, PropertyValue pv) throws BeansException {
 		if (tokens.keys != null) {
 			processKeyedProperty(tokens, pv);
@@ -278,9 +278,10 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 			processLocalProperty(tokens, pv);
 		}
 	}
-
+	////实现属性依赖注入功能
 	@SuppressWarnings("unchecked")
 	private void processKeyedProperty(PropertyTokenHolder tokens, PropertyValue pv) {
+		//调用属性的 getter(readerMethod)方法，获取属性的值
 		Object propValue = getPropertyHoldingValue(tokens);
 		PropertyHandler ph = getLocalPropertyHandler(tokens.actualName);
 		if (ph == null) {
@@ -289,7 +290,7 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 		}
 		Assert.state(tokens.keys != null, "No token keys");
 		String lastKey = tokens.keys[tokens.keys.length - 1];
-
+		//注入 array 类型的属性值
 		if (propValue.getClass().isArray()) {
 			Class<?> requiredType = propValue.getClass().getComponentType();
 			int arrayIndex = Integer.parseInt(lastKey);
@@ -300,6 +301,7 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 				}
 				Object convertedValue = convertIfNecessary(tokens.canonicalName, oldValue, pv.getValue(),
 						requiredType, ph.nested(tokens.keys.length));
+				//获取集合类型属性的长度
 				int length = Array.getLength(propValue);
 				if (arrayIndex >= length && arrayIndex < this.autoGrowCollectionLimit) {
 					Class<?> componentType = propValue.getClass().getComponentType();
@@ -308,8 +310,10 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 					int lastKeyIndex = tokens.canonicalName.lastIndexOf('[');
 					String propName = tokens.canonicalName.substring(0, lastKeyIndex);
 					setPropertyValue(propName, newArray);
+					//调用属性的 getter(readerMethod)方法，获取属性的值
 					propValue = getPropertyValue(propName);
 				}
+				//将属性的值赋值给数组中的元素
 				Array.set(propValue, arrayIndex, convertedValue);
 			}
 			catch (IndexOutOfBoundsException ex) {
@@ -326,9 +330,11 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 			if (isExtractOldValueForEditor() && index < list.size()) {
 				oldValue = list.get(index);
 			}
+			//获取 list 解析后的属性值
 			Object convertedValue = convertIfNecessary(tokens.canonicalName, oldValue, pv.getValue(),
 					requiredType, ph.nested(tokens.keys.length));
 			int size = list.size();
+			//如果 list 的长度大于属性值的长度，则多余的元素赋值为 null
 			if (index >= size && index < this.autoGrowCollectionLimit) {
 				for (int i = size; i < index; i++) {
 					try {
@@ -345,6 +351,7 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 			}
 			else {
 				try {
+					//将值添加到 list 中
 					list.set(index, convertedValue);
 				}
 				catch (IndexOutOfBoundsException ex) {
